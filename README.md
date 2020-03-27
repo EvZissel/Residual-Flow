@@ -7,7 +7,7 @@ E. Zisselman, A. Tamar. "Deep Residual Flow for Out of Distribution Detection". 
 ``` 
 
 <p align="center">
-    <img width="640" height="532" src="./figures/AUROC_vs_iterations.png">
+    <img width="640" height="532" src="./figures/fig_AUROC_vs_iterations.png">
 </p>
 
 ## Citing Residual Flow for OOD Detection 
