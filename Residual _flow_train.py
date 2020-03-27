@@ -9,7 +9,6 @@ import pickle
 import json
 
 
-import data_loader
 import os
 import lib_generation
 import argparse
@@ -98,7 +97,6 @@ class RealNVP(nn.Module):
         return logp_z + logp
 
     def sample(self, batchSize):
-        # z = self.prior.sample((batchSize, 1))
         z = torch.cuda.FloatTensor(batchSize, 2).normal_(mean=0, std=1)
         logp = -0.5 * (z.size(1)) * math.log(2 * math.pi) * torch.cuda.FloatTensor(z.size(0)).fill_(1) - 0.5 * ((z ** 2).sum(dim=1))
         x = self.g(z, False)
@@ -130,8 +128,6 @@ class Nets(nn.Module):
         # x_ = F.leaky_relu(x_, inplace=True)
         # x_ = self.fc6(x_)
         x_ = self.rescale(torch.tanh(x_))
-        # x_ = torch.tanh(x_)
-        # x_ = 0
         return x_
 
 class Nett(nn.Module):
@@ -275,12 +271,9 @@ class Permutation(nn.Module):
 
     def forward(self, x, inverse = False):
         if inverse:
-            # x = torch.mm(self.W.transpose(1,0), x.transpose(1,0))
             x = x[:,self.inv_perm]
         else:
-            # x = torch.mm(self.W , x.transpose(1,0))
             x = x[:,self.perm]
-        # x = x.transpose(1, 0)
 
         return x
 
@@ -315,7 +308,6 @@ def main():
         X_validation.append(list_features[args.layer][i][:v_size_per_class, :] - sample_class_mean[args.layer][i])
         X.append(list_features[args.layer][i][v_size_per_class:, :] - sample_class_mean[args.layer][i])
 
-    # epsilon = 1e-5
     train_loader_X = []
     validation_loader_X = []
     X_all = 0
@@ -358,10 +350,7 @@ def main():
     log_abs_det_A_inv_layer = torch.tensor(log_abs_det_A_inv[args.layer])
     t_start = 0
     for i in range(args.num_classes):
-        # MODEL_FLOW = os.path.join(outf_load,'maodel_{}_layer_{}_residual_perclass_{}iter_10flows_0.2length_hidden_Wperm_3L_simple_arch'.format(dataset, layer, t_start), 'flow_{}'.format(i))
         flow.append(RealNVP(masks, num_features, args.length_hidden, A_layer, A_inv_layer, log_abs_det_A_inv_layer))
-        # flow[i].load_state_dict(torch.load(MODEL_FLOW, map_location="cuda:{}".format(cuda_index)), strict=False)
-        # flow[i].to(device)
 
         optimizer.append(torch.optim.Adam([p for p in flow[i].parameters() if p.requires_grad == True], lr=args.lr))
 
@@ -409,18 +398,17 @@ def main():
             'num_flows': int(len(flow[0].t)),
         }
 
-        with open( os.path.join(outf,'Real_NVP_%s_%s_layer_%s_residual_perclass_%siter_%sflows_%slength_hidden_param_Wperm_3L_simple_arch.txt' % (args.dataset, out_dist, args.layer,args.num_iter,int(len(flow[0].t)), args.length_hidden)), 'w') as file:
+        with open( os.path.join(outf,'Residual_flow_%s_%s_layer_%s_%siter_%sflows_%slength_hidden.txt' % (args.dataset, args.layer,args.num_iter,int(len(flow[0].t)), args.length_hidden)), 'w') as file:
             file.write('date: %s\n' % (datetime.datetime.now()))
             file.write(json.dumps(pram))
 
         score_in = np.asarray(score_in, dtype=np.float32)
         score_out = np.asarray(score_out, dtype=np.float32)
         score_data, score_labels = lib_generation.merge_and_generate_labels(score_out, score_in)
-        file_name = os.path.join(outf, 'Real_NVP_%s_%s_layer_%s_residual_perclass_%siter_%sflows_%slength_hidden_Wperm_3L_simple_arch' % (args.dataset, out_dist, args.layer,args.num_iter,int(len(flow[0].t)), args.length_hidden))
+        file_name = os.path.join(outf, 'Residual_flow_%s_%s_layer_%s_%siter_%sflows_%slength_hidden' % (args.dataset, out_dist, args.layer,args.num_iter,int(len(flow[0].t)), args.length_hidden))
         score_data = np.concatenate((score_data, score_labels), axis=1)
         np.savez(file_name, score_data, loss_vec, pram, auroc_vec, validation_vec)
 
-    # X_batch = iter(train_loader_X).next()
     std_Z_max = 0
     std_Z_min = 1
     for i in range(args.num_classes):
@@ -513,7 +501,7 @@ def train(train_loader_X, flow, optimizer, num_iter, num_train, outf, layer, len
                 MODELS_PATH_flow_i = os.path.join(path_dir,'flow_%s' %(i))
                 torch.save(flow[i].state_dict(), MODELS_PATH_flow_i)
 
-    path_dir = os.path.join(outf,'model_%s_layer_%s_residual_flow_%siter_%sflows_%slength_hidden' % (dataset, layer, num_iter, int(len(flow[0].t)), length_hidden))
+    path_dir = os.path.join(outf,'model_%s_layer_%s_residual_flow_%slength_hidden' % (dataset, layer, num_iter, int(len(flow[0].t)), length_hidden))
     if os.path.isdir(path_dir) == False:
         os.mkdir(path_dir)
     for i in range(num_classes):
@@ -546,7 +534,6 @@ def test(test_loader, flow, sample_class_mean, num_classes):
 
 
 def make_roc(confidence, labels, nth):
-    # confidence = np.sort(confidence)
     min_thresh = np.amin(confidence)
     max_thresh = np.amax(confidence)
 

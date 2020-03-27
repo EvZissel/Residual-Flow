@@ -1,3 +1,4 @@
+# Based on the code of Kimin Lee (Sun Oct 21 2018)
 from __future__ import print_function
 import torch
 import numpy as np
@@ -6,7 +7,6 @@ import torch.nn.functional as F
 
 from torch.autograd import Variable
 from scipy.spatial.distance import pdist, cdist, squareform
-from sklearn.utils.extmath import fast_logdet
 
 # lid of a batch of query points X
 def mle_batch(data, batch, k):

@@ -13,7 +13,6 @@ import data_loader
 import os
 import lib_generation
 from torchvision import transforms
-from torch.autograd import Variable
 
 device = torch.device('cuda')
 
@@ -21,12 +20,13 @@ import argparse
 
 parser = argparse.ArgumentParser(description='PyTorch code: Residual flow detector test')
 parser.add_argument('--cuda_index', type=int, default=0, help='index of CUDA device, default value 0')
-parser.add_argument('--batch_size', type=int, default=20, metavar='N', help='batch size for data loader')
+parser.add_argument('--batch_size', type=int, default=32, metavar='N', help='batch size for data loader')
 parser.add_argument('--dataroot', default='./data', help='path to dataset')
 parser.add_argument('--outf', default='output', help='folder to output results')
 parser.add_argument('--net_type', required=True, help='resnet | densenet')
 parser.add_argument('--num_classes', default=10, help='number of classes')
 parser.add_argument('--dataset', required=True, help='cifar10 | cifar100 | svhn')
+parser.add_argument('--validation_src', default='IO', help='IO | FGSM (choice of validation source for hyper-parameter tuning: IO for in- and out-of-distribution, or FGSM for adverarial validation)')
 args = parser.parse_args()
 print('Running with CUDA {}, net type {},batch_size {}'.format(args.cuda_index, args.net_type, args.batch_size))
 
@@ -133,8 +133,6 @@ class Nets(nn.Module):
         # x_ = F.leaky_relu(x_, inplace=True)
         # x_ = self.fc6(x_)
         x_ = self.rescale(torch.tanh(x_))
-        # x_ = torch.tanh(x_)
-        # x_ = 0
         return x_
 
 class Nett(nn.Module):
@@ -278,24 +276,28 @@ class Permutation(nn.Module):
 
     def forward(self, x, inverse = False):
         if inverse:
-            # x = torch.mm(self.W.transpose(1,0), x.transpose(1,0))
             x = x[:,self.inv_perm]
         else:
-            # x = torch.mm(self.W , x.transpose(1,0))
             x = x[:,self.perm]
-        # x = x.transpose(1, 0)
 
         return x
 
 
 def main():
 
-    if args.dataset == 'svhn':
-        out_dist_list = ['cifar10', 'imagenet_resize', 'lsun_resize']
+    if args.validation_src == 'FGSM':
+        if args.dataset == 'svhn':
+            out_dist_list = ['cifar10', 'imagenet_resize', 'lsun_resize', 'FGSM']
+        else:
+            out_dist_list = ['svhn', 'imagenet_resize', 'lsun_resize', 'FGSM']
     else:
-        out_dist_list = ['svhn', 'imagenet_resize', 'lsun_resize']
+        if args.dataset == 'svhn':
+            out_dist_list = ['cifar10', 'imagenet_resize', 'lsun_resize']
+        else:
+            out_dist_list = ['svhn', 'imagenet_resize', 'lsun_resize']
 
-    outf = os.path.join(args.outf, args.net_type + '_' + args.dataset + 'RealNVP')
+    outf_load = os.path.join(args.outf, args.net_type + '_' + args.dataset + 'RealNVP')
+    outf = os.path.join(args.outf, args.net_type + '_' + args.dataset + 'RealNVP_magnitude')
     if os.path.isdir(outf) == False:
         os.mkdir(outf)
 
@@ -354,16 +356,16 @@ def main():
         masks = torch.from_numpy(np.array([right, left, right, left, right, left, right, left, right, left]).astype(np.float32)).cuda()
         flow = []
 
-        length_hidden = 1
-        if args.net_type == 'densenet' and args.dataset == 'cifar100' and layer == 3:
-            length_hidden = 0.5
+
+        # We reduce the number of neurons in the hidden layers due to GPU memory limitations (11 GB in GTX 2080Ti) - comment out this line for larger GPU memory
+        length_hidden = reture_length_hidden(layer)
 
         A_layer = torch.tensor(A[layer])
         A_inv_layer = torch.tensor(A_inv[layer])
         log_abs_det_A_inv_layer = torch.tensor(log_abs_det_A_inv[layer])
 
         for i in range(args.num_classes):
-            MODEL_FLOW = os.path.join(outf,'model_{}_layer_{}_residual_flow_{}length_hidden'.format(args.dataset, layer,length_hidden), 'flow_{}'.format(i))
+            MODEL_FLOW = os.path.join(outf_load,'model_{}_layer_{}_residual_flow_{}length_hidden'.format(args.dataset, layer,length_hidden), 'flow_{}'.format(i))
             flow.append(RealNVP(masks, num_features, length_hidden, A_layer, A_inv_layer, log_abs_det_A_inv_layer))
             flow[i].load_state_dict(torch.load(MODEL_FLOW, map_location="cuda:{}".format(args.cuda_index)), strict=False)
             flow[i].to(device)
@@ -405,14 +407,14 @@ def main():
                     'magnitude': magnitude,
                 }
 
-                with open( os.path.join(outf,'Real_NVP_%s_%s_layer_%s_residual_flow_%smagnitude.txt' % (args.dataset, out_dist, layer,magnitude)), 'w') as file:
+                with open( os.path.join(outf,'Residual_flow_%s_%s_layer_%s_%smagnitude.txt' % (args.dataset, out_dist, layer,magnitude)), 'w') as file:
                     file.write('date: %s\n' % (datetime.datetime.now()))
                     file.write(json.dumps(pram))
 
                 score_in = np.asarray(score_in, dtype=np.float32)
                 score_out = np.asarray(score_out, dtype=np.float32)
                 score_data, score_labels = lib_generation.merge_and_generate_labels(score_out, score_in)
-                file_name = os.path.join(outf, 'Real_NVP_%s_%s_layer_%s_residual_flow_%smagnitude' % (args.dataset, out_dist, layer, magnitude))
+                file_name = os.path.join(outf, 'Residual_flow_%s_%s_layer_%s_%smagnitude' % (args.dataset, out_dist, layer, magnitude))
                 score_data = np.concatenate((score_data, score_labels), axis=1)
                 np.savez(file_name, score_data, pram)
 
@@ -428,6 +430,15 @@ def recursion_change_bn(module):
             module1 = recursion_change_bn(module1)
     return module
 
+def reture_length_hidden(layer):
+    length_hidden = 1
+    if args.net_type == 'densenet' and args.dataset == 'cifar100' and layer == 3:
+        length_hidden = 0.5
+    if args.net_type == 'resnet' and args.dataset == 'cifar100' and layer == 4:
+        length_hidden = 0.2
+    if args.net_type == 'resnet' and args.dataset == 'svhn' and layer == 4:
+        length_hidden = 0.5
+    return length_hidden
 
 if __name__ == '__main__':
     main()

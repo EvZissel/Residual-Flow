@@ -3,7 +3,6 @@ Out of distribution Regression based on the code of Kimin Lee (Sun Oct 21 2018)
 """
 from __future__ import print_function
 
-import pickle
 
 import numpy as np
 import lib_regression
@@ -18,12 +17,13 @@ print(args)
 
 def main():
     # initial setup
-    dataset_list = ['cifar10', 'cifar100', 'svhn']
+    # dataset_list = ['cifar10', 'cifar100', 'svhn']
+    dataset_list = ['cifar10']
 
 
     score_list = ['0.0', '0.01', '0.005', '0.002', '0.0014', '0.001', '0.0005']
     
-    # train and measure the performance of Mahalanobis detector
+    # train and measure the performance of residual flow detector
     list_best_results, list_best_results_index = [], []
     for dataset in dataset_list:
         print('In-distribution: ', dataset)

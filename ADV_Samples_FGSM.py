@@ -7,7 +7,6 @@ import argparse
 import torch
 import torch.nn as nn
 import data_loader
-import numpy as np
 import models
 import os
 
@@ -22,7 +21,6 @@ parser.add_argument('--outf', default='./adv_output/', help='folder to output re
 parser.add_argument('--num_classes', type=int, default=10, help='the # of classes')
 parser.add_argument('--net_type', required=True, help='resnet | densenet')
 parser.add_argument('--gpu', type=int, default=0, help='gpu index')
-parser.add_argument('--adv_type', required=True, help='FGSM | BIM | DeepFool | CWL2')
 args = parser.parse_args()
 print(args)
 
@@ -30,32 +28,15 @@ def main():
     # set the path to pre-trained model and output
     pre_trained_net = './pre_trained/' + args.net_type + '_' + args.dataset + '.pth'
     args.outf = args.outf + args.net_type + '_' + args.dataset + '/'
-    if os.path.isdir(args.outf) == False:
-        os.mkdir(args.outf)
+    if not os.path.exists(args.outf):
+        os.makedirs(args.outf)
     torch.cuda.manual_seed(0)
     torch.cuda.set_device(args.gpu)
     # check the in-distribution dataset
     if args.dataset == 'cifar100':
         args.num_classes = 100
-    if args.adv_type == 'FGSM':
-        adv_noise = 0.05
-    elif args.adv_type == 'BIM':
-        adv_noise = 0.01
-    elif args.adv_type == 'DeepFool':
-        if args.net_type == 'resnet':
-            if args.dataset == 'cifar10':
-                adv_noise = 0.18
-            elif args.dataset == 'cifar100':
-                adv_noise = 0.03
-            else:
-                adv_noise = 0.1
-        else:
-            if args.dataset == 'cifar10':
-                adv_noise = 0.6
-            elif args.dataset == 'cifar100':
-                adv_noise = 0.1
-            else:
-                adv_noise = 0.5
+
+    adv_noise = 0.05
 
     # load networks
     if args.net_type == 'densenet':
@@ -75,32 +56,12 @@ def main():
         min_pixel = -1.98888885975
         max_pixel = 2.12560367584
         if args.dataset == 'cifar10':
-            if args.adv_type == 'FGSM':
-                random_noise_size = 0.21 / 4
-            elif args.adv_type == 'BIM':
-                random_noise_size = 0.21 / 4
-            elif args.adv_type == 'DeepFool':
-                random_noise_size = 0.13 * 2 / 10
-            elif args.adv_type == 'CWL2':
-                random_noise_size = 0.03 / 2
+            random_noise_size = 0.21 / 4
         elif args.dataset == 'cifar100':
-            if args.adv_type == 'FGSM':
-                random_noise_size = 0.21 / 8
-            elif args.adv_type == 'BIM':
-                random_noise_size = 0.21 / 8
-            elif args.adv_type == 'DeepFool':
-                random_noise_size = 0.13 * 2 / 8
-            elif args.adv_type == 'CWL2':
-                random_noise_size = 0.06 / 5
+            random_noise_size = 0.21 / 8
         else:
-            if args.adv_type == 'FGSM':
-                random_noise_size = 0.21 / 4
-            elif args.adv_type == 'BIM':
-                random_noise_size = 0.21 / 4
-            elif args.adv_type == 'DeepFool':
-                random_noise_size = 0.16 * 2 / 5
-            elif args.adv_type == 'CWL2':
-                random_noise_size = 0.07 / 2
+            random_noise_size = 0.21 / 4
+
     elif args.net_type == 'resnet':
         model = models.ResNet34(num_c=args.num_classes)
         model.load_state_dict(torch.load(pre_trained_net, map_location = "cuda:" + str(args.gpu)))
@@ -110,32 +71,11 @@ def main():
         min_pixel = -2.42906570435
         max_pixel = 2.75373125076
         if args.dataset == 'cifar10':
-            if args.adv_type == 'FGSM':
-                random_noise_size = 0.25 / 4
-            elif args.adv_type == 'BIM':
-                random_noise_size = 0.13 / 2
-            elif args.adv_type == 'DeepFool':
-                random_noise_size = 0.25 / 4
-            elif args.adv_type == 'CWL2':
-                random_noise_size = 0.05 / 2
+            random_noise_size = 0.25 / 4
         elif args.dataset == 'cifar100':
-            if args.adv_type == 'FGSM':
-                random_noise_size = 0.25 / 8
-            elif args.adv_type == 'BIM':
-                random_noise_size = 0.13 / 4
-            elif args.adv_type == 'DeepFool':
-                random_noise_size = 0.13 / 4
-            elif args.adv_type == 'CWL2':
-                random_noise_size = 0.05 / 2
+            random_noise_size = 0.25 / 8
         else:
-            if args.adv_type == 'FGSM':
-                random_noise_size = 0.25 / 4
-            elif args.adv_type == 'BIM':
-                random_noise_size = 0.13 / 2
-            elif args.adv_type == 'DeepFool':
-                random_noise_size = 0.126
-            elif args.adv_type == 'CWL2':
-                random_noise_size = 0.05 / 1 
+            random_noise_size = 0.25 / 4
             
     model.cuda()
     print('load model: ' + args.net_type)
@@ -144,7 +84,7 @@ def main():
     print('load target data: ', args.dataset)
     _, test_loader = data_loader.getTargetDataSet(args.dataset, args.batch_size, in_transform, args.dataroot)
     
-    print('Attack: ' + args.adv_type  +  ', Dist: ' + args.dataset + '\n')
+    print('Attack: ' + 'FGSM' +  ', Dist: ' + args.dataset + '\n')
     model.eval()
     adv_data_tot, clean_data_tot, noisy_data_tot = 0, 0, 0
     label_tot = 0
@@ -186,57 +126,28 @@ def main():
         loss = criterion(output, target)
         loss.backward()
 
-        if args.adv_type == 'FGSM': 
-            gradient = torch.ge(inputs.grad.data, 0)
-            gradient = (gradient.float()-0.5)*2
-            if args.net_type == 'densenet':
-                gradient.index_copy_(1, torch.LongTensor([0]).cuda(), \
-                                     gradient.index_select(1, torch.LongTensor([0]).cuda()) / (63.0/255.0))
-                gradient.index_copy_(1, torch.LongTensor([1]).cuda(), \
-                                     gradient.index_select(1, torch.LongTensor([1]).cuda()) / (62.1/255.0))
-                gradient.index_copy_(1, torch.LongTensor([2]).cuda(), \
-                                     gradient.index_select(1, torch.LongTensor([2]).cuda()) / (66.7/255.0))
-            else:
-                gradient.index_copy_(1, torch.LongTensor([0]).cuda(), \
-                                     gradient.index_select(1, torch.LongTensor([0]).cuda()) / (0.2023))
-                gradient.index_copy_(1, torch.LongTensor([1]).cuda(), \
-                                     gradient.index_select(1, torch.LongTensor([1]).cuda()) / (0.1994))
-                gradient.index_copy_(1, torch.LongTensor([2]).cuda(), \
-                                     gradient.index_select(1, torch.LongTensor([2]).cuda()) / (0.2010))
 
-        elif args.adv_type == 'BIM': 
-            gradient = torch.sign(inputs.grad.data)
-            for k in range(5):
-                inputs = torch.add(inputs.data, adv_noise, gradient)
-                inputs = torch.clamp(inputs, min_pixel, max_pixel)
-                inputs = Variable(inputs, requires_grad=True)
-                output = model(inputs)
-                loss = criterion(output, target)
-                loss.backward()
-                gradient = torch.sign(inputs.grad.data)
-                if args.net_type == 'densenet':
-                    gradient.index_copy_(1, torch.LongTensor([0]).cuda(), \
-                                         gradient.index_select(1, torch.LongTensor([0]).cuda()) / (63.0/255.0))
-                    gradient.index_copy_(1, torch.LongTensor([1]).cuda(), \
-                                         gradient.index_select(1, torch.LongTensor([1]).cuda()) / (62.1/255.0))
-                    gradient.index_copy_(1, torch.LongTensor([2]).cuda(), \
-                                         gradient.index_select(1, torch.LongTensor([2]).cuda()) / (66.7/255.0))
-                else:
-                    gradient.index_copy_(1, torch.LongTensor([0]).cuda(), \
-                                         gradient.index_select(1, torch.LongTensor([0]).cuda()) / (0.2023))
-                    gradient.index_copy_(1, torch.LongTensor([1]).cuda(), \
-                                         gradient.index_select(1, torch.LongTensor([1]).cuda()) / (0.1994))
-                    gradient.index_copy_(1, torch.LongTensor([2]).cuda(), \
-                                         gradient.index_select(1, torch.LongTensor([2]).cuda()) / (0.2010))
-
-        if args.adv_type == 'DeepFool':
-            _, adv_data = adversary.deepfool(model, data.data.clone(), target.data.cpu(), \
-                                             args.num_classes, step_size=adv_noise, train_mode=False)
-            adv_data = adv_data.cuda()
-        elif args.adv_type == 'CWL2':
-            _, adv_data = adversary.cw(model, data.data.clone(), target.data.cpu(), 1.0, 'l2', crop_frac=1.0)
+        gradient = torch.ge(inputs.grad.data, 0)
+        gradient = (gradient.float()-0.5)*2
+        if args.net_type == 'densenet':
+            gradient.index_copy_(1, torch.LongTensor([0]).cuda(), \
+                                 gradient.index_select(1, torch.LongTensor([0]).cuda()) / (63.0/255.0))
+            gradient.index_copy_(1, torch.LongTensor([1]).cuda(), \
+                                 gradient.index_select(1, torch.LongTensor([1]).cuda()) / (62.1/255.0))
+            gradient.index_copy_(1, torch.LongTensor([2]).cuda(), \
+                                 gradient.index_select(1, torch.LongTensor([2]).cuda()) / (66.7/255.0))
         else:
-            adv_data = torch.add(inputs.data, adv_noise, gradient)
+            gradient.index_copy_(1, torch.LongTensor([0]).cuda(), \
+                                 gradient.index_select(1, torch.LongTensor([0]).cuda()) / (0.2023))
+            gradient.index_copy_(1, torch.LongTensor([1]).cuda(), \
+                                 gradient.index_select(1, torch.LongTensor([1]).cuda()) / (0.1994))
+            gradient.index_copy_(1, torch.LongTensor([2]).cuda(), \
+                                 gradient.index_select(1, torch.LongTensor([2]).cuda()) / (0.2010))
+
+
+
+
+        adv_data = torch.add(inputs.data, adv_noise, gradient)
             
         adv_data = torch.clamp(adv_data, min_pixel, max_pixel)
         
@@ -277,10 +188,10 @@ def main():
     noisy_data_tot = torch.index_select(noisy_data_tot, 0, selected_list)
     label_tot = torch.index_select(label_tot, 0, selected_list)
 
-    torch.save(clean_data_tot, '%s/clean_data_%s_%s_%s.pth' % (args.outf, args.net_type, args.dataset, args.adv_type))
-    torch.save(adv_data_tot, '%s/adv_data_%s_%s_%s.pth' % (args.outf, args.net_type, args.dataset, args.adv_type))
-    torch.save(noisy_data_tot, '%s/noisy_data_%s_%s_%s.pth' % (args.outf, args.net_type, args.dataset, args.adv_type))
-    torch.save(label_tot, '%s/label_%s_%s_%s.pth' % (args.outf, args.net_type, args.dataset, args.adv_type))
+    torch.save(clean_data_tot, '%s/clean_data_%s_%s_%s.pth' % (args.outf, args.net_type, args.dataset, 'FGSM'))
+    torch.save(adv_data_tot, '%s/adv_data_%s_%s_%s.pth' % (args.outf, args.net_type, args.dataset, 'FGSM'))
+    torch.save(noisy_data_tot, '%s/noisy_data_%s_%s_%s.pth' % (args.outf, args.net_type, args.dataset, 'FGSM'))
+    torch.save(label_tot, '%s/label_%s_%s_%s.pth' % (args.outf, args.net_type, args.dataset, 'FGSM'))
 
     print('Adversarial Noise:({:.2f})\n'.format(generated_noise / total))
     print('Final Accuracy: {}/{} ({:.2f}%)\n'.format(correct, total, 100. * correct / total))

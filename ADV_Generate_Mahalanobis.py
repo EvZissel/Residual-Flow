@@ -23,7 +23,6 @@ parser.add_argument('--outf', default='./adv_output/', help='folder to output re
 parser.add_argument('--num_classes', type=int, default=10, help='the # of classes')
 parser.add_argument('--net_type', required=True, help='resnet | densenet')
 parser.add_argument('--gpu', type=int, default=0, help='gpu index')
-parser.add_argument('--adv_type', required=True, help='FGSM | BIM | DeepFool | CWL2')
 args = parser.parse_args()
 print(args)
 
@@ -62,10 +61,10 @@ def main():
     # load dataset
     print('load target data: ', args.dataset)
     train_loader, _ = data_loader.getTargetDataSet(args.dataset, args.batch_size, in_transform, args.dataroot)
-    test_clean_data = torch.load(args.outf + 'clean_data_%s_%s_%s.pth' % (args.net_type, args.dataset, args.adv_type))
-    test_adv_data = torch.load(args.outf + 'adv_data_%s_%s_%s.pth' % (args.net_type, args.dataset, args.adv_type))
-    test_noisy_data = torch.load(args.outf + 'noisy_data_%s_%s_%s.pth' % (args.net_type, args.dataset, args.adv_type))
-    test_label = torch.load(args.outf + 'label_%s_%s_%s.pth' % (args.net_type, args.dataset, args.adv_type))
+    test_clean_data = torch.load(args.outf + 'clean_data_%s_%s_%s.pth' % (args.net_type, args.dataset, 'FGSM'))
+    test_adv_data = torch.load(args.outf + 'adv_data_%s_%s_%s.pth' % (args.net_type, args.dataset, 'FGSM'))
+    test_noisy_data = torch.load(args.outf + 'noisy_data_%s_%s_%s.pth' % (args.net_type, args.dataset, 'FGSM'))
+    test_label = torch.load(args.outf + 'label_%s_%s_%s.pth' % (args.net_type, args.dataset, 'FGSM'))
 
     # set information about feature extaction
     model.eval()
@@ -81,22 +80,6 @@ def main():
         
     print('get sample mean and covariance')
     sample_mean, precision = lib_generation.sample_estimator(model, args.num_classes, feature_list, train_loader)
-    
-    # print('get LID scores')
-    # LID, LID_adv, LID_noisy \
-    # = lib_generation.get_LID(model, test_clean_data, test_adv_data, test_noisy_data, test_label, num_output)
-    # overlap_list = [10, 20, 30, 40, 50, 60, 70, 80, 90]
-    # list_counter = 0
-    # for overlap in overlap_list:
-    #     Save_LID = np.asarray(LID[list_counter], dtype=np.float32)
-    #     Save_LID_adv = np.asarray(LID_adv[list_counter], dtype=np.float32)
-    #     Save_LID_noisy = np.asarray(LID_noisy[list_counter], dtype=np.float32)
-    #     Save_LID_pos = np.concatenate((Save_LID, Save_LID_noisy))
-    #     LID_data, LID_labels = lib_generation.merge_and_generate_labels(Save_LID_adv, Save_LID_pos)
-    #     file_name = os.path.join(args.outf, 'LID_%s_%s_%s.npy' % (overlap, args.dataset, args.adv_type))
-    #     LID_data = np.concatenate((LID_data, LID_labels), axis=1)
-    #     np.save(file_name, LID_data)
-    #     list_counter += 1
     
     print('get Mahalanobis scores')
     m_list = [0.0, 0.01, 0.005, 0.002, 0.0014, 0.001, 0.0005]
@@ -140,7 +123,7 @@ def main():
         Mahalanobis_pos = np.concatenate((Mahalanobis_in, Mahalanobis_noisy))
 
         Mahalanobis_data, Mahalanobis_labels = lib_generation.merge_and_generate_labels(Mahalanobis_out, Mahalanobis_pos)
-        file_name = os.path.join(args.outf, 'Mahalanobis_%s_%s_%s.npy' % (str(magnitude), args.dataset, args.adv_type))
+        file_name = os.path.join(args.outf, 'Mahalanobis_%s_%s_%s.npy' % (str(magnitude), args.dataset, 'FGSM'))
         
         Mahalanobis_data = np.concatenate((Mahalanobis_data, Mahalanobis_labels), axis=1)
         np.save(file_name, Mahalanobis_data)

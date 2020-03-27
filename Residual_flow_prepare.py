@@ -1,4 +1,3 @@
-import math
 
 import numpy as np
 import torch
@@ -23,6 +22,7 @@ parser.add_argument('--outf', default='output', help='folder to output results')
 parser.add_argument('--num_classes', type=int, default=100, help='the # of classes')
 parser.add_argument('--net_type', required=True, help='resnet | densenet')
 parser.add_argument('--gpu', type=int, default=0, help='gpu index')
+parser.add_argument('--validation_src', default='IO', help='IO | FGSM (choice of validation source for hyper-parameter tuning: IO for in- and out-of-distribution, or FGSM for adverarial validation)')
 args = parser.parse_args()
 print(args)
 
@@ -57,10 +57,17 @@ def main():
         model.load_state_dict(torch.load(pre_trained_net, map_location = "cuda:" + str(0)))
         in_transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),])
 
-    if args.dataset == 'svhn':
-        out_dist_list = ['cifar10', 'imagenet_resize', 'lsun_resize']
+    if args.validation_src == 'FGSM':
+        if args.dataset == 'svhn':
+            out_dist_list = ['cifar10', 'imagenet_resize', 'lsun_resize', 'FGSM']
+        else:
+            out_dist_list = ['svhn', 'imagenet_resize', 'lsun_resize', 'FGSM']
+
     else:
-        out_dist_list = ['svhn', 'imagenet_resize', 'lsun_resize']
+        if args.dataset == 'svhn':
+            out_dist_list = ['cifar10', 'imagenet_resize', 'lsun_resize']
+        else:
+            out_dist_list = ['svhn', 'imagenet_resize', 'lsun_resize']
 
 
     print('load model: ' + args.net_type)
@@ -71,7 +78,7 @@ def main():
     print('load target data: ', args.dataset)
     train_loader, test_loader = data_loader.getTargetDataSet(args.dataset, args.batch_size, in_transform, args.dataroot)
 
-    # set information about feature extaction
+    # set information about feature extraction
     temp_x = torch.rand(2, 3, 32, 32).cuda()
     temp_x = Variable(temp_x)
     temp_list = model.feature_list(temp_x)[1]

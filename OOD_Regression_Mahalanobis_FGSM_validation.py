@@ -1,6 +1,6 @@
 """
-Created on Sun Oct 21 2018
-@author: Kimin Lee
+based on the code of Kimin Lee (Sun Oct 21 2018).
+
 """
 from __future__ import print_function
 import numpy as np

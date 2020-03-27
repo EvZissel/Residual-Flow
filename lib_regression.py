@@ -4,7 +4,6 @@ import numpy as np
 import os
 import calculate_log as callog
 
-from scipy.spatial.distance import pdist, cdist, squareform
 
 
 def block_split(X, Y, out):
@@ -41,8 +40,6 @@ def block_split_RealNVP(X, Y, out):
         partition = 10000
     X_adv, Y_adv = X[:partition], Y[:partition]
     X_norm, Y_norm = X[partition: :], Y[partition: :]
-    # X_norm, Y_norm = X[:partition], Y[:partition]
-    # X_adv, Y_adv = X[partition: :], Y[partition: :]
     num_train = 1000
 
     X_train = np.concatenate((X_norm[:num_train], X_adv[:num_train]))
@@ -143,10 +140,11 @@ def load_characteristics_RealNVP(score, dataset, out, outf, net_type, num_classe
 
     if net_type == 'densenet':
 
-        file_name_L0 = os.path.join(outf, 'Real_NVP_{}_{}_layer_0_residual_perclass_{}magnitude_simple_arch.npz'.format(dataset, out, score))
-        file_name_L1 = os.path.join(outf, 'Real_NVP_{}_{}_layer_1_residual_perclass_{}magnitude_simple_arch.npz'.format(dataset, out, score))
-        file_name_L2 = os.path.join(outf, 'Real_NVP_{}_{}_layer_2_residual_perclass_{}magnitude_simple_arch.npz'.format(dataset, out, score))
-        file_name_L3 = os.path.join(outf, 'Real_NVP_{}_{}_layer_3_residual_perclass_{}magnitude_simple_arch.npz'.format(dataset, out, score))
+        file_name_L0 = os.path.join(outf, 'Residual_flow_{}_{}_layer_0_{}magnitude.npz'.format(dataset, out, score))
+        file_name_L1 = os.path.join(outf, 'Residual_flow_{}_{}_layer_1_{}magnitude.npz'.format(dataset, out, score))
+        file_name_L2 = os.path.join(outf, 'Residual_flow_{}_{}_layer_2_{}magnitude.npz'.format(dataset, out, score))
+        file_name_L3 = os.path.join(outf, 'Residual_flow_{}_{}_layer_3_{}magnitude.npz'.format(dataset, out, score))
+
 
         data_L0 = np.load(file_name_L0)
         data_L1 = np.load(file_name_L1)
@@ -175,11 +173,11 @@ def load_characteristics_RealNVP(score, dataset, out, outf, net_type, num_classe
 
     else:
 
-        file_name_L0 = os.path.join(outf, 'Real_NVP_{}_{}_layer_0_residual_perclass_{}magnitude_simple_arch.npz'.format(dataset, out, score))
-        file_name_L1 = os.path.join(outf, 'Real_NVP_{}_{}_layer_1_residual_perclass_{}magnitude_simple_arch.npz'.format(dataset, out, score))
-        file_name_L2 = os.path.join(outf, 'Real_NVP_{}_{}_layer_2_residual_perclass_{}magnitude_simple_arch.npz'.format(dataset, out, score))
-        file_name_L3 = os.path.join(outf, 'Real_NVP_{}_{}_layer_3_residual_perclass_{}magnitude_simple_arch.npz'.format(dataset, out, score))
-        file_name_L4 = os.path.join(outf, 'Real_NVP_{}_{}_layer_4_residual_perclass_{}magnitude_simple_arch.npz'.format(dataset, out, score))
+        file_name_L0 = os.path.join(outf, 'Residual_flow_{}_{}_layer_0_{}magnitude.npz'.format(dataset, out, score))
+        file_name_L1 = os.path.join(outf, 'Residual_flow_{}_{}_layer_1_{}magnitude.npz'.format(dataset, out, score))
+        file_name_L2 = os.path.join(outf, 'Residual_flow_{}_{}_layer_2_{}magnitude.npz'.format(dataset, out, score))
+        file_name_L3 = os.path.join(outf, 'Residual_flow_{}_{}_layer_3_{}magnitude.npz'.format(dataset, out, score))
+        file_name_L4 = os.path.join(outf, 'Residual_flow_{}_{}_layer_4_{}magnitude.npz'.format(dataset, out, score))
 
 
         data_L0 = np.load(file_name_L0)
@@ -211,7 +209,6 @@ def load_characteristics_RealNVP(score, dataset, out, outf, net_type, num_classe
 
         X = np.stack((score_L0, score_L1, score_L2, score_L3, score_L4),axis=-1)
 
-    # Y = 1 - RealNVP_data_L3[:, -1]
     Y = RealNVP_data_L3[:, -1]
 
     return X, Y
