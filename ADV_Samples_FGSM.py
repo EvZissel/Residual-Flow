@@ -13,7 +13,7 @@ import os
 from torchvision import transforms
 from torch.autograd import Variable
 
-parser = argparse.ArgumentParser(description='PyTorch code: Mahalanobis detector')
+parser = argparse.ArgumentParser(description='PyTorch code: adversarial samples')
 parser.add_argument('--batch_size', type=int, default=50, metavar='N', help='batch size for data loader')
 parser.add_argument('--dataset', required=True, help='cifar10 | cifar100 | svhn')
 parser.add_argument('--dataroot', default='./data', help='path to dataset')

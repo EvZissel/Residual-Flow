@@ -10,7 +10,7 @@ import argparse
 
 from sklearn.linear_model import LogisticRegressionCV
 
-parser = argparse.ArgumentParser(description='PyTorch code: Regression')
+parser = argparse.ArgumentParser(description='PyTorch code: Residual flow regression')
 parser.add_argument('--net_type', required=True, help='resnet | densenet')
 args = parser.parse_args()
 print(args)
