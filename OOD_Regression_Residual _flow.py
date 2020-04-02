@@ -17,8 +17,7 @@ print(args)
 
 def main():
     # initial setup
-    # dataset_list = ['cifar10', 'cifar100', 'svhn']
-    dataset_list = ['cifar10']
+    dataset_list = ['cifar10', 'cifar100', 'svhn']
 
 
     score_list = ['0.0', '0.01', '0.005', '0.002', '0.0014', '0.001', '0.0005']

@@ -2,15 +2,15 @@
 An implementation of the Residual Flow algorithm for out-of-distribution detection \[[arXiv](https://arxiv.org/abs/2001.05419)\]
 . 
 Some code was adopted from [deep_Mahalanobis_detector](https://github.com/pokaxpoka/deep_Mahalanobis_detector) and [RealNVP](https://github.com/tensorflow/models/tree/master/research/real_nvp).
-```
-E. Zisselman, A. Tamar. "Deep Residual Flow for Out of Distribution Detection". CVPR 2020.
-``` 
 
 <p align="center">
-    <img width="512" height="384" src="./figures/figure_AUROC_vs_iterations.png">
+    <img width="500" src="./figures/Fig_AUROC_vs_iterations.png">
 </p>
 
 ## Citing Residual Flow for OOD Detection 
+```
+E. Zisselman, A. Tamar. "Deep Residual Flow for Out of Distribution Detection". CVPR 2020.
+``` 
 ```
 @InProceedings{Zisselman_2020_CVPR,
     author = {Zisselman, Ev and Tamar, Aviv},
@@ -22,7 +22,7 @@ E. Zisselman, A. Tamar. "Deep Residual Flow for Out of Distribution Detection". 
 ```
 
 ## Dependencies
-Tested on Ubuntu Linux 18.04.04 and Python 3.7, and requires PyTorch to be installed:
+Tested on Ubuntu Linux 18.04.04 and Python 3.7, and requires the following dependencies:
 
 * [PyTorch](http://pytorch.org/): Requires 1 GPU with CUDA 10.2 support.
 * [scipy](https://github.com/scipy/scipy)
@@ -57,7 +57,7 @@ We provide six pre-trained residual flow networks for OOD detection for ResNet a
 
 To be placed in `./output/`.
 
-## Detecting Out-of-Distribution Samples (Residual Flow detector)
+## Detecting Out-of-Distribution Samples (validate on OOD samples)
 Example usage of residual flow targeting ResNet trained on CIFAR-10.  
 Settings: 1x GPU (index 0)
 ### 1. Feature extraction
@@ -65,7 +65,6 @@ Settings: 1x GPU (index 0)
 # extract feature activations from classification network 
 python Residual_flow_prepare.py --dataset cifar10 --net_type resnet --gpu 0
 ```
-Note: For validation using adversarial samples (FGSM) run first 'ADV_Samples_FGSM.py' to generate the adversarial samples, then run the above commend with the additional flag `--validation_src FGSM`
 
 ### 2. Residual Flow training (optional)
 Place the pre-trained residual flow networks (ResNet, CIFAR-10) in `./output/` or train the networks using the following:
@@ -87,9 +86,6 @@ python Residual_flow_test_processing.py --net_type resnet --dataset cifar10
 python OOD_Generate_Mahalanobis.py --dataset cifar10 --net_type resnet --gpu 0
 ```
 
-Note: For validation using adversarial samples (FGSM) add the flag `--validation_src FGSM`  
- (optional) for comparison with Mahalanobis detector, use 'ADV_Generate_Mahalanobis.py' instead.
-
 ### 4. Train a simple regression detector
 ```
 python OOD_Regression_Residual_flow.py --net_type resnet
@@ -97,4 +93,43 @@ python OOD_Regression_Residual_flow.py --net_type resnet
 # (optional) comparison with Mahalanobis detector
 python OOD_Regression_Mahalanobis.py --net_type resnet
 ```
-Note: For validation using adversarial samples (FGSM) use 'OOD_Regression_Residual_flow_FGSM_validation.py' for training the logistic regression and 'OOD_Regression_Mahalanobis_FGSM_validation.py' for comparison to Mahalanobis.  
+
+
+## Detecting Out-of-Distribution Samples (validate on FGSM samples)
+
+### 1. Feature extraction
+```
+# generate the adversarial samples
+python ADV_Samples_FGSM.py
+
+# extract feature activations from classification network 
+python Residual_flow_prepare.py --dataset cifar10 --net_type resnet --gpu 0 --validation_src FGSM
+```
+
+### 2. Residual Flow training (optional)
+Place the pre-trained residual flow networks (ResNet, CIFAR-10) in `./output/` or train the networks using the following:
+
+Note: Each layer is trained individually using the flag `--layer n ` where 'n' is the layer index [0..N]
+```
+# (optional - you may use the pre-trained networks above) 
+
+# Residual Flow training - trained per target network layer [0..N]
+#                          where N = 3 for DenseNet and N = 4 for ResNet 
+python Residual_flow_train.py --num_iter 2000 --net_type resnet --dataset cifar10 --layer 0 --gpu 0
+```
+
+### 3. Extract Residual Flow score for OOD detection
+```
+python Residual_flow_test_processing.py --net_type resnet --dataset cifar10 --validation_src FGSM
+
+# (optional) comparison with Mahalanobis detector
+python ADV_Generate_Mahalanobis.py.py --dataset cifar10 --net_type resnet --gpu 0
+```
+
+### 4. Train a simple regression detector
+```
+python OOD_Regression_Residual_flow_FGSM_validation.py --net_type resnet
+
+# (optional) comparison with Mahalanobis detector
+python OOD_Regression_Mahalanobis_FGSM_validation.py --net_type resnet
+```
