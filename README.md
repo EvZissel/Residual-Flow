@@ -50,10 +50,10 @@ To be placed in `./pre_trained/`.
 We provide six pre-trained residual flow networks for OOD detection for ResNet and DenseNet:
 
 1. DenseNet trained on CIFAR-10, CIFAR-100 and SVHN.
-* [Residual Flow for DenseNet-CIFAR-10](https://technionmail-my.sharepoint.com/:u:/g/personal/ev_zis_campus_technion_ac_il/EXaDW_xbU0BAhOgxfbj1loMBmIHPYQuoJSPmImSqSeyJhA?e=n6g1P9) / [Residual Flow for DenseNet-CIFAR-100](https://technionmail-my.sharepoint.com/:u:/g/personal/ev_zis_campus_technion_ac_il/EaJu3Nkc_29Pi-odyTWUnKABGGcHJ04Yo9v8wrThUYmjug?e=EqgJ5z) / [Residual Flow for DenseNet-SVHN](https://technionmail-my.sharepoint.com/:u:/g/personal/ev_zis_campus_technion_ac_il/ESVdpBLM-b9EizVulcWbFLkBA101mYPK0KBJvRwT_N_kdw?e=j3R1hU)
+* [Residual Flow for DenseNet-CIFAR-10](https://technionmail-my.sharepoint.com/:u:/g/personal/ev_zis_campus_technion_ac_il/EXaDW_xbU0BAhOgxfbj1loMBmIHPYQuoJSPmImSqSeyJhA?e=VumZEY) / [Residual Flow for DenseNet-CIFAR-100](https://technionmail-my.sharepoint.com/:u:/g/personal/ev_zis_campus_technion_ac_il/EaJu3Nkc_29Pi-odyTWUnKABGGcHJ04Yo9v8wrThUYmjug?e=scIlc2) / [Residual Flow for DenseNet-SVHN](https://technionmail-my.sharepoint.com/:u:/g/personal/ev_zis_campus_technion_ac_il/ESVdpBLM-b9EizVulcWbFLkBA101mYPK0KBJvRwT_N_kdw?e=azcjjK)
 
 2. ResNet trained on CIFAR-10, CIFAR-100 and SVHN.
-* [Residual Flow for ResNet-CIFAR-10](https://technionmail-my.sharepoint.com/:u:/g/personal/ev_zis_campus_technion_ac_il/EcwqtRASutFBphwR4s4NF8ABwgjdD_tJ4Zj5dLjLq8PKMw?e=xCjfui) / [Residual Flow for ResNet-CIFAR-100](https://technionmail-my.sharepoint.com/:u:/g/personal/ev_zis_campus_technion_ac_il/EYpuBvexU_1Jg156O_v7hEIBZz5EtfQAqQSuI6saLV-zOA?e=iEKCV3) / [Residual Flow for ResNet-SVHN](https://technionmail-my.sharepoint.com/:u:/g/personal/ev_zis_campus_technion_ac_il/EbgPAwWgda9PiVXrd0bBFuMBAQSUXfTgbgaTzT4EtjfhXw?e=7ArKax)
+* [Residual Flow for ResNet-CIFAR-10](https://technionmail-my.sharepoint.com/:u:/g/personal/ev_zis_campus_technion_ac_il/EcwqtRASutFBphwR4s4NF8ABwgjdD_tJ4Zj5dLjLq8PKMw?e=iYUYZr) / [Residual Flow for ResNet-CIFAR-100](https://technionmail-my.sharepoint.com/:u:/g/personal/ev_zis_campus_technion_ac_il/EYpuBvexU_1Jg156O_v7hEIBZz5EtfQAqQSuI6saLV-zOA?e=b3YKJY) / [Residual Flow for ResNet-SVHN](https://technionmail-my.sharepoint.com/:u:/g/personal/ev_zis_campus_technion_ac_il/EbgPAwWgda9PiVXrd0bBFuMBAQSUXfTgbgaTzT4EtjfhXw?e=iYB5KE)
 
 To be placed in `./output/`.
 
